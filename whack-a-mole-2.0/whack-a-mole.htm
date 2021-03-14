@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Whack a Mole</title>
+	<script src="lib.js"></script>
+	<script>
+		var mole;
+		var hammer;
+		var rasen;
+		var spiel;
+		var pointsEle;
+		var points = 0;
+		var maxPoints = 0;
+		var maxPointsHidden = 0;
+		var moleRespawnTime = 1500;
+		var timeoutID;
+		var clickedOnce;
+		var canMove = false;
+		var test;
+		var xhr;
+
+		window.onload = function()
+		{
+			mole = document.getElementById("mole");
+			hammer = document.getElementById("hammer");
+			rasen = document.getElementById("rasen");
+			spiel = document.getElementById("spiel");
+			pointsEle = document.getElementById("points");
+			test = document.getElementById("test");
+			mole.style.visibility = "hidden";
+			hammer.style.visibility = "hidden";
+			points = document.getElementById("scorePoints");
+
+			points.value = 0;
+
+			document.onmousemove = function(e)
+			{
+				if(canMove)
+				setElePos(hammer, new Vector2(e.clientX - 20, e.clientY - 20));
+			}
+
+			mole.onclick = function(e)
+			{			
+				points.value++;
+				moleRespawnTime -= 50;
+				setNewMolePos();		
+			};
+			pointsEle.innerHTML = "Points: " +  String(points.value) + "/" +String(maxPoints);	
+		}
+
+		function startGame()
+		{
+			document.getElementById("startB").disabled = true;
+			console.log("Start");
+			var newMolePos = GetNewMolePos();
+			setElePos(mole, newMolePos);
+			mole.style.visibility = "visible";
+			hammer.style.visibility = "visible";
+			canMove = true;
+			document.body.style.cursor = "none";
+			points.value = 0;
+			moleRespawnTime = 1500;
+			maxPoints = 0;
+
+			timeoutID = setTimeout(function()
+			{				
+				setNewMolePos();
+			}, moleRespawnTime);
+		}
+
+		function reloadPage()
+		{
+			location.reload();
+		}
+
+		function setNewMolePos()
+		{			
+			console.log(points.value);
+			maxPoints++;
+			
+			setElePos(mole, GetNewMolePos());			
+			pointsEle.innerHTML = "Points: " +  String(points.value) + "/" +String(maxPoints);							
+			gameOver();
+			console.log(maxPoints);
+		
+			clearTimeout(timeoutID);
+			timeoutID = setTimeout(function()
+			{					
+				setNewMolePos();			
+			}, moleRespawnTime)		
+		}	
+
+		function gameOver()
+		{			
+			if(points.value < maxPoints)
+			{
+				sendPoints();
+
+				if(confirm("Punkte: [ " + points.value + " ]  noch eine Runde?"))
+				{
+					reloadPage();
+				}
+				else
+				{
+					window.location.href = "http://localhost/whack-a-mole-2.0/db-scoreboard.php";
+				}
+			}
+		}			
+
+		function GetNewMolePos(){
+			var xPos = getRandomInt(rasen.clientWidth - mole.clientWidth - 5);
+			var yPos = getRandomInt(rasen.clientHeight- mole.clientHeight - 5);
+			return new Vector2(xPos, yPos);
+		}
+
+		function setElePos(element, position){
+			element.style.top = position.y+"px";
+			element.style.left = position.x+"px";
+		}
+
+		function getRandomInt(max)
+		{
+  			return Math.floor(Math.random() * Math.floor(max));
+		}
+
+		var Vector2 = function(x,y)
+		{
+			this.x = x;
+			this.y = y;
+		};
+
+		function logout()
+		{
+			window.location.href = "http://localhost/whack-a-mole-2.0/loginPage.htm";
+		}
+
+		function scoreboard()
+		{
+			window.location.href = "http://localhost/whack-a-mole-2.0/db-scoreboard.php";	
+		}
+
+		var successFunc = function(data)
+		{
+			console.log(data);                              
+		}
+
+		var errorFunc = function(data)
+		{
+			console.log("Error " + data); 
+		}
+
+		var sendPoints = function()
+		{
+			xhr = lib.ajaxCreateXhr(successFunc, errorFunc);
+			lib.ajaxSend(xhr, "db-scoreboard.php", "POST", "score=" + points.value);	
+		}
+	</script>
+	<style>
+		body{
+			background-color: rgb(58, 58, 58);
+		}
+		#spiel{
+			cursor: url('imgs/hammer.gif'), pointer;
+			width: 1080px;
+			height: 600px;	
+			margin: 5px;		
+		}
+		#rasen{
+			width: 1440px;
+			height: 768px;
+		}
+		#mole{
+			width: 5%;
+			height: auto;
+			position: absolute;
+			z-index: 1;
+		}
+		body{
+			margin:0px;
+			padding: 0px;
+		}
+		button{
+			width: 325px;
+			height: 45px;
+			font-size: 25px;
+			font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+		}
+		#points{
+			color:rgb(39, 39, 39);
+			font-size: 25px;
+			position: absolute;
+			left: 1%;
+			top: 1%;
+			font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+			font-weight: bold;
+		}
+
+		#scorePoints{
+			color:rgb(39, 39, 39);
+			font-size: 25px;
+			position: absolute;
+			left: 1%;
+			top: 1%;
+			font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+			font-weight: bold;
+		}
+
+		#div1{
+			text-align: left;
+		}
+
+		p{
+			font-size: 18px;
+			font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+			color:rgb(0, 221, 221);
+		}
+		#bestenliste
+		{
+			width: 983px;
+		}
+	</style>
+</head>
+<body>
+	<div id="spiel">
+		<img src="imgs/rasenNew.png" id="rasen">		
+		<img src="imgs/mole.gif" id="mole">
+		<img id="hammer">		 
+		<div>
+			<button id="startB" onclick="startGame()">Start</button>
+			<button onclick="reloadPage()">Neustarten</button>			
+			<button id="abmelden" onclick="logout()">Abmelden</button>		
+			<button id="bestenliste" onclick="scoreboard()">Bestenliste</button>	
+			<p>Anleitung: Jeder Treffe des Moles wird gezählt, sobald sie eine Mole nicht treffen heißt es Game Over!</p>
+			<p>Versuch so viele wie möglich zu treffen, viel Glück!</p>
+			<div id="points" name="points"></div>
+			<div id="scorePoints" name="scorePoints"></div>		
+		</div>		
+	</div>
+</body>
+</html>
+
